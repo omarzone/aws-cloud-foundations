@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 
 from config.database import init_db
 from models import alumno, profesor
+from services import s3_service
 from validators import alumno_validator, profesor_validator
 
 app = Flask(__name__)
@@ -201,6 +202,34 @@ def delete_profesor(id):
     if not eliminado:
         return jsonify({"error": "Profesor no encontrado"}), 404
     return jsonify({"mensaje": "Profesor eliminado"}), 200
+
+
+@app.route("/alumnos/<int:id>/fotoPerfil", methods=["POST"])
+def post_foto_perfil(id):
+    """Sube una foto de perfil para un alumno.
+
+    Recibe una imagen en formato multipart/form-data, la sube a S3 y
+    guarda la URL en el perfil del alumno.
+
+    Args:
+        id (int): Identificador del alumno.
+
+    Returns:
+        Response: URL de la foto con codigo 200, o error 404 si el
+            alumno no existe.
+    """
+    if "foto" not in request.files:
+        return jsonify({"error": "No se envio ninguna foto"}), 400
+
+    alumno_existente = alumno.get_by_id(id)
+    if alumno_existente is None:
+        return jsonify({"error": "Alumno no encontrado"}), 404
+
+    foto = request.files["foto"]
+    url = s3_service.subir_foto(foto, id)
+    alumno.update(id, {"fotoPerfilUrl": url})
+
+    return jsonify({"fotoPerfilUrl": url}), 200
 
 
 if __name__ == "__main__":
