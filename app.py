@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 
+from config.database import init_db
 from models import alumno, profesor
 from validators import alumno_validator, profesor_validator
 
@@ -47,7 +48,7 @@ def post_alumno():
     """Crea un nuevo alumno.
 
     Recibe los datos del alumno en formato JSON, los valida y si son
-    correctos crea el registro en memoria.
+    correctos guarda el registro en la base de datos.
 
     Returns:
         Response: Alumno creado con codigo 201, o errores de validacion
@@ -132,7 +133,7 @@ def post_profesor():
     """Crea un nuevo profesor.
 
     Recibe los datos del profesor en formato JSON, los valida y si son
-    correctos crea el registro en memoria.
+    correctos guarda el registro en la base de datos.
 
     Returns:
         Response: Profesor creado con codigo 201, o errores de validacion
@@ -203,4 +204,5 @@ def delete_profesor(id):
 
 
 if __name__ == "__main__":
+    init_db()
     app.run(host="0.0.0.0", port=8080, debug=True)
