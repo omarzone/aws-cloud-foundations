@@ -1,32 +1,30 @@
-profesores = []
+"""Modelo Profesor con SQLAlchemy.
+
+Define la tabla profesores y las operaciones CRUD usando sesiones de base de datos.
+"""
+
+from config.database import Base, get_session
+from sqlalchemy import Column, Integer, String
 
 
-class Profesor:
+class Profesor(Base):
     """Representa un profesor del sistema SICEI.
 
     Attributes:
-        id (int): Identificador unico del profesor.
+        id (int): Identificador unico, auto-generado por la base de datos.
         numeroEmpleado (int): Numero de empleado del profesor.
         nombres (str): Nombres del profesor.
         apellidos (str): Apellidos del profesor.
         horasClase (int): Horas de clase asignadas al profesor.
     """
 
-    def __init__(self, id, numeroEmpleado, nombres, apellidos, horasClase):
-        """Inicializa una nueva instancia de Profesor.
+    __tablename__ = "profesores"
 
-        Args:
-            id (int): Identificador unico.
-            numeroEmpleado (int): Numero de empleado.
-            nombres (str): Nombres del profesor.
-            apellidos (str): Apellidos del profesor.
-            horasClase (int): Horas de clase asignadas.
-        """
-        self.id = id
-        self.numeroEmpleado = numeroEmpleado
-        self.nombres = nombres
-        self.apellidos = apellidos
-        self.horasClase = horasClase
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    numeroEmpleado = Column(Integer, nullable=False)
+    nombres = Column(String(255), nullable=False)
+    apellidos = Column(String(255), nullable=False)
+    horasClase = Column(Integer, nullable=False)
 
     def to_dict(self):
         """Convierte el profesor a un diccionario.
@@ -49,7 +47,12 @@ def get_all():
     Returns:
         list[dict]: Lista de profesores en formato diccionario.
     """
-    return [profesor.to_dict() for profesor in profesores]
+    session = get_session()
+    try:
+        profesores = session.query(Profesor).all()
+        return [profesor.to_dict() for profesor in profesores]
+    finally:
+        session.close()
 
 
 def get_by_id(id):
@@ -61,31 +64,39 @@ def get_by_id(id):
     Returns:
         dict | None: Diccionario del profesor si existe, None en caso contrario.
     """
-    for profesor in profesores:
-        if profesor.id == id:
-            return profesor.to_dict()
-    return None
+    session = get_session()
+    try:
+        profesor = session.get(Profesor, id)
+        return profesor.to_dict() if profesor else None
+    finally:
+        session.close()
 
 
 def create(data):
-    """Crea un nuevo profesor y lo agrega al array en memoria.
+    """Crea un nuevo profesor y lo guarda en la base de datos.
 
     Args:
-        data (dict): Datos del profesor con las llaves id, numeroEmpleado,
+        data (dict): Datos del profesor con las llaves numeroEmpleado,
             nombres, apellidos y horasClase.
 
     Returns:
-        dict: El profesor creado en formato diccionario.
+        dict: El profesor creado en formato diccionario, incluyendo el id
+            generado por la base de datos.
     """
-    profesor = Profesor(
-        id=data["id"],
-        numeroEmpleado=data["numeroEmpleado"],
-        nombres=data["nombres"],
-        apellidos=data["apellidos"],
-        horasClase=data["horasClase"],
-    )
-    profesores.append(profesor)
-    return profesor.to_dict()
+    session = get_session()
+    try:
+        profesor = Profesor(
+            numeroEmpleado=data["numeroEmpleado"],
+            nombres=data["nombres"],
+            apellidos=data["apellidos"],
+            horasClase=data["horasClase"],
+        )
+        session.add(profesor)
+        session.commit()
+        session.refresh(profesor)
+        return profesor.to_dict()
+    finally:
+        session.close()
 
 
 def update(id, data):
@@ -98,18 +109,26 @@ def update(id, data):
     Returns:
         dict | None: Diccionario del profesor actualizado, None si no existe.
     """
-    for profesor in profesores:
-        if profesor.id == id:
-            profesor.numeroEmpleado = data["numeroEmpleado"]
-            profesor.nombres = data["nombres"]
-            profesor.apellidos = data["apellidos"]
-            profesor.horasClase = data["horasClase"]
-            return profesor.to_dict()
-    return None
+    session = get_session()
+    try:
+        profesor = session.get(Profesor, id)
+        if not profesor:
+            return None
+        profesor.numeroEmpleado = data.get(
+            "numeroEmpleado", profesor.numeroEmpleado
+        )
+        profesor.nombres = data.get("nombres", profesor.nombres)
+        profesor.apellidos = data.get("apellidos", profesor.apellidos)
+        profesor.horasClase = data.get("horasClase", profesor.horasClase)
+        session.commit()
+        session.refresh(profesor)
+        return profesor.to_dict()
+    finally:
+        session.close()
 
 
 def delete(id):
-    """Elimina un profesor del array en memoria.
+    """Elimina un profesor de la base de datos.
 
     Args:
         id (int): Identificador del profesor a eliminar.
@@ -117,8 +136,13 @@ def delete(id):
     Returns:
         bool: True si se elimino, False si no se encontro.
     """
-    for i, profesor in enumerate(profesores):
-        if profesor.id == id:
-            del profesores[i]
-            return True
-    return False
+    session = get_session()
+    try:
+        profesor = session.get(Profesor, id)
+        if not profesor:
+            return False
+        session.delete(profesor)
+        session.commit()
+        return True
+    finally:
+        session.close()
