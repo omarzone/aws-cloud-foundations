@@ -9,6 +9,9 @@ API REST para la gestion de alumnos y profesores del sistema SICEI.
 
 - Python 3.8 o superior
 - Flask 3.1.1
+- SQLAlchemy 2.0
+- boto3 (AWS SDK)
+- PyMySQL
 
 ## Instalacion
 

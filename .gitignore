@@ -37,5 +37,8 @@ venv/
 *.pem
 *.key
 
+# Database
+*.db
+
 # Documentation (excluded from repo)
 docs/
