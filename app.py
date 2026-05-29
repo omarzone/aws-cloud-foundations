@@ -6,6 +6,32 @@ from validators import alumno_validator, profesor_validator
 app = Flask(__name__)
 
 
+@app.errorhandler(404)
+def not_found(error):
+    """Maneja rutas no encontradas.
+
+    Args:
+        error: El error 404 generado por Flask.
+
+    Returns:
+        Response: Mensaje de error en JSON con codigo 404.
+    """
+    return jsonify({"error": "Ruta no encontrada"}), 404
+
+
+@app.errorhandler(405)
+def method_not_allowed(error):
+    """Maneja metodos HTTP no soportados en rutas existentes.
+
+    Args:
+        error: El error 405 generado por Flask.
+
+    Returns:
+        Response: Mensaje de error en JSON con codigo 405.
+    """
+    return jsonify({"error": "Metodo no permitido"}), 405
+
+
 @app.route("/alumnos", methods=["GET"])
 def get_alumnos():
     """Obtiene la lista de todos los alumnos.
