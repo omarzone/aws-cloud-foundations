@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 
 from config.database import init_db
 from models import alumno, profesor
-from services import s3_service, sns_service
+from services import s3_service, sns_service, dynamo_service
 from validators import alumno_validator, profesor_validator
 
 app = Flask(__name__)
@@ -252,6 +252,74 @@ def post_email(id):
 
     sns_service.enviar_calificaciones(alumno_data)
     return jsonify({"mensaje": "Calificaciones enviadas"}), 200
+
+
+@app.route("/alumnos/<int:id>/session/login", methods=["POST"])
+def session_login(id):
+    """Inicia sesion para un alumno.
+
+    Recibe la contrasena, la compara con la almacenada en la base de datos
+    y si coincide crea una sesion en DynamoDB.
+
+    Args:
+        id (int): Identificador del alumno.
+
+    Returns:
+        Response: sessionString con codigo 200 si la contrasena es correcta,
+            o error 400 si la contrasena es incorrecta o el alumno no existe.
+    """
+    data = request.get_json()
+    password = data.get("password", "")
+
+    alumno_data = alumno.get_by_id(id)
+    if alumno_data is None:
+        return jsonify({"error": "Alumno no encontrado"}), 400
+
+    if alumno_data["password"] != password:
+        return jsonify({"error": "Contrasena incorrecta"}), 400
+
+    session_string = dynamo_service.crear_sesion(id)
+    return jsonify({"sessionString": session_string}), 200
+
+
+@app.route("/alumnos/<int:id>/session/verify", methods=["POST"])
+def session_verify(id):
+    """Verifica si una sesion es valida y esta activa.
+
+    Args:
+        id (int): Identificador del alumno.
+
+    Returns:
+        Response: Codigo 200 si la sesion es valida y activa,
+            o 400 si no lo es.
+    """
+    data = request.get_json()
+    session_string = data.get("sessionString", "")
+
+    if dynamo_service.verificar_sesion(session_string):
+        return jsonify({"mensaje": "Sesion valida"}), 200
+
+    return jsonify({"error": "Sesion invalida o expirada"}), 400
+
+
+@app.route("/alumnos/<int:id>/session/logout", methods=["POST"])
+def session_logout(id):
+    """Cierra la sesion de un alumno.
+
+    Args:
+        id (int): Identificador del alumno.
+
+    Returns:
+        Response: Codigo 200 si se cerro correctamente,
+            o 400 si la sesion no existe.
+    """
+    data = request.get_json()
+    session_string = data.get("sessionString", "")
+
+    if dynamo_service.cerrar_sesion(session_string):
+        return jsonify({"mensaje": "Sesion cerrada"}), 200
+
+    return jsonify({"error": "Sesion no encontrada"}), 400
 
 
 if __name__ == "__main__":
