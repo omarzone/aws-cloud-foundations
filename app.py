@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 
-from models import alumno
-from validators import alumno_validator
+from models import alumno, profesor
+from validators import alumno_validator, profesor_validator
 
 app = Flask(__name__)
 
@@ -89,6 +89,91 @@ def delete_alumno(id):
     if not eliminado:
         return jsonify({"error": "Alumno no encontrado"}), 404
     return jsonify({"mensaje": "Alumno eliminado"}), 200
+
+
+@app.route("/profesores", methods=["GET"])
+def get_profesores():
+    """Obtiene la lista de todos los profesores.
+
+    Returns:
+        Response: Lista de profesores en formato JSON con codigo 200.
+    """
+    return profesor.get_all(), 200
+
+
+@app.route("/profesores", methods=["POST"])
+def post_profesor():
+    """Crea un nuevo profesor.
+
+    Recibe los datos del profesor en formato JSON, los valida y si son
+    correctos crea el registro en memoria.
+
+    Returns:
+        Response: Profesor creado con codigo 201, o errores de validacion
+            con codigo 400.
+    """
+    data = request.get_json()
+
+    errores = profesor_validator.validar_profesor(data)
+    if errores:
+        return jsonify({"errores": errores}), 400
+
+    return profesor.create(data), 201
+
+
+@app.route("/profesores/<int:id>", methods=["GET"])
+def get_profesor(id):
+    """Obtiene un profesor por su id.
+
+    Args:
+        id (int): Identificador del profesor.
+
+    Returns:
+        Response: Profesor encontrado con codigo 200, o error 404 si no existe.
+    """
+    resultado = profesor.get_by_id(id)
+    if resultado is None:
+        return jsonify({"error": "Profesor no encontrado"}), 404
+    return resultado, 200
+
+
+@app.route("/profesores/<int:id>", methods=["PUT"])
+def put_profesor(id):
+    """Actualiza un profesor existente.
+
+    Args:
+        id (int): Identificador del profesor a actualizar.
+
+    Returns:
+        Response: Profesor actualizado con codigo 200, error 404 si no existe,
+            o errores de validacion con codigo 400.
+    """
+    data = request.get_json()
+
+    errores = profesor_validator.validar_profesor(data)
+    if errores:
+        return jsonify({"errores": errores}), 400
+
+    resultado = profesor.update(id, data)
+    if resultado is None:
+        return jsonify({"error": "Profesor no encontrado"}), 404
+    return resultado, 200
+
+
+@app.route("/profesores/<int:id>", methods=["DELETE"])
+def delete_profesor(id):
+    """Elimina un profesor por su id.
+
+    Args:
+        id (int): Identificador del profesor a eliminar.
+
+    Returns:
+        Response: Codigo 200 si se elimino, o error 404 si no existe.
+    """
+    eliminado = profesor.delete(id)
+    if not eliminado:
+        return jsonify({"error": "Profesor no encontrado"}), 404
+    return jsonify({"mensaje": "Profesor eliminado"}), 200
 
 
 if __name__ == "__main__":

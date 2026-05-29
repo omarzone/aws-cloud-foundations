@@ -47,3 +47,25 @@ El servidor se ejecuta en `http://localhost:8080`.
     "promedio": 9.5
 }
 ```
+
+### Profesores
+
+| Metodo | Ruta | Descripcion |
+|---|---|---|
+| GET | `/profesores` | Obtiene todos los profesores |
+| GET | `/profesores/{id}` | Obtiene un profesor por id |
+| POST | `/profesores` | Crea un nuevo profesor |
+| PUT | `/profesores/{id}` | Actualiza un profesor existente |
+| DELETE | `/profesores/{id}` | Elimina un profesor |
+
+### Formato JSON para Profesor
+
+```json
+{
+    "id": 456,
+    "numeroEmpleado": 789,
+    "nombres": "Juan",
+    "apellidos": "Perez",
+    "horasClase": 20
+}
+```
