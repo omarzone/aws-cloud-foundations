@@ -36,5 +36,60 @@ def post_alumno():
     return alumno.create(data), 201
 
 
+@app.route("/alumnos/<int:id>", methods=["GET"])
+def get_alumno(id):
+    """Obtiene un alumno por su id.
+
+    Args:
+        id (int): Identificador del alumno.
+
+    Returns:
+        Response: Alumno encontrado con codigo 200, o error 404 si no existe.
+    """
+    resultado = alumno.get_by_id(id)
+    if resultado is None:
+        return jsonify({"error": "Alumno no encontrado"}), 404
+    return resultado, 200
+
+
+@app.route("/alumnos/<int:id>", methods=["PUT"])
+def put_alumno(id):
+    """Actualiza un alumno existente.
+
+    Args:
+        id (int): Identificador del alumno a actualizar.
+
+    Returns:
+        Response: Alumno actualizado con codigo 200, error 404 si no existe,
+            o errores de validacion con codigo 400.
+    """
+    data = request.get_json()
+
+    errores = alumno_validator.validar_alumno(data)
+    if errores:
+        return jsonify({"errores": errores}), 400
+
+    resultado = alumno.update(id, data)
+    if resultado is None:
+        return jsonify({"error": "Alumno no encontrado"}), 404
+    return resultado, 200
+
+
+@app.route("/alumnos/<int:id>", methods=["DELETE"])
+def delete_alumno(id):
+    """Elimina un alumno por su id.
+
+    Args:
+        id (int): Identificador del alumno a eliminar.
+
+    Returns:
+        Response: Codigo 200 si se elimino, o error 404 si no existe.
+    """
+    eliminado = alumno.delete(id)
+    if not eliminado:
+        return jsonify({"error": "Alumno no encontrado"}), 404
+    return jsonify({"mensaje": "Alumno eliminado"}), 200
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)

@@ -31,7 +31,10 @@ El servidor se ejecuta en `http://localhost:8080`.
 | Metodo | Ruta | Descripcion |
 |---|---|---|
 | GET | `/alumnos` | Obtiene todos los alumnos |
+| GET | `/alumnos/{id}` | Obtiene un alumno por id |
 | POST | `/alumnos` | Crea un nuevo alumno |
+| PUT | `/alumnos/{id}` | Actualiza un alumno existente |
+| DELETE | `/alumnos/{id}` | Elimina un alumno |
 
 ### Formato JSON para Alumno
 
