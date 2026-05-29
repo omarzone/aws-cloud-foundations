@@ -5,17 +5,13 @@ def validar_alumno(data):
     de dato sean correctos y que los valores cumplan con las reglas de negocio.
 
     Args:
-        data (dict): Diccionario con los datos del alumno. Debe contener las
-            llaves id, nombres, apellidos, matricula y promedio.
+        data (dict): Diccionario con los datos del alumno.
 
     Returns:
         list[str] | None: Lista de mensajes de error si hay errores de
             validacion, o None si los datos son validos.
     """
     errores = []
-
-    if "id" not in data or not isinstance(data["id"], int):
-        errores.append("El campo 'id' es requerido y debe ser un numero entero")
 
     if "nombres" not in data or data["nombres"] is None or data["nombres"] == "":
         errores.append(
@@ -39,5 +35,14 @@ def validar_alumno(data):
         errores.append("El campo 'promedio' es requerido y debe ser un numero")
     elif data["promedio"] < 0:
         errores.append("El campo 'promedio' no puede ser negativo")
+
+    if (
+        "password" not in data
+        or data["password"] is None
+        or data["password"] == ""
+    ):
+        errores.append(
+            "El campo 'password' es requerido y no puede estar vacio"
+        )
 
     return errores if errores else None

@@ -5,17 +5,13 @@ def validar_profesor(data):
     de dato sean correctos y que los valores cumplan con las reglas de negocio.
 
     Args:
-        data (dict): Diccionario con los datos del profesor. Debe contener las
-            llaves id, numeroEmpleado, nombres, apellidos y horasClase.
+        data (dict): Diccionario con los datos del profesor.
 
     Returns:
         list[str] | None: Lista de mensajes de error si hay errores de
             validacion, o None si los datos son validos.
     """
     errores = []
-
-    if "id" not in data or not isinstance(data["id"], int):
-        errores.append("El campo 'id' es requerido y debe ser un numero entero")
 
     if "nombres" not in data or data["nombres"] is None or data["nombres"] == "":
         errores.append(
