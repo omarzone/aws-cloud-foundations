@@ -33,5 +33,9 @@ build/
 venv/
 .venv/
 
+# Secrets & keys
+*.pem
+*.key
+
 # Documentation (excluded from repo)
 docs/
