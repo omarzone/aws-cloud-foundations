@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 
 from config.database import init_db
 from models import alumno, profesor
-from services import s3_service
+from services import s3_service, sns_service
 from validators import alumno_validator, profesor_validator
 
 app = Flask(__name__)
@@ -230,6 +230,28 @@ def post_foto_perfil(id):
     alumno.update(id, {"fotoPerfilUrl": url})
 
     return jsonify({"fotoPerfilUrl": url}), 200
+
+
+@app.route("/alumnos/<int:id>/email", methods=["POST"])
+def post_email(id):
+    """Envia las calificaciones del alumno por correo usando SNS.
+
+    Publica un mensaje en el topic de SNS con los datos y calificaciones
+    del alumno.
+
+    Args:
+        id (int): Identificador del alumno.
+
+    Returns:
+        Response: Mensaje de confirmacion con codigo 200, o error 404
+            si el alumno no existe.
+    """
+    alumno_data = alumno.get_by_id(id)
+    if alumno_data is None:
+        return jsonify({"error": "Alumno no encontrado"}), 404
+
+    sns_service.enviar_calificaciones(alumno_data)
+    return jsonify({"mensaje": "Calificaciones enviadas"}), 200
 
 
 if __name__ == "__main__":
